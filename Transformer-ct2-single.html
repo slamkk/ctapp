@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>电流互感器设计</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* 标签页样式 */
+      body {
+        background-color: #f0f0f0;
+        font-family: "Microsoft YaHei", sans-serif;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        color: #333333;
+      }
+
+      .tab {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+      }
+
+      .tab button {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: 0.3s;
+        color: #000307;
+      }
+
+      .tab button:hover {
+        background-color: #ea1717;
+        color: #f0f0f0;
+      }
+
+      .tab button.active {
+        background-color: #4f98eb;
+        color: #f0f0f0;
+      }
+
+      .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-top: none;
+      }
+      /* 外面最大的容器样式 */
+      .container {
+        max-width: 600px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(38, 39, 38, 0.58);
+        padding: 20px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* number输入框样式 */
+      input[type="number"],
+      select {
+        padding: 10px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      /* 调整选择框的样式 */
+      select {
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+
+      /* text下拉框样式 */
+      input[type="text"],
+      select {
+        padding: 8px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      /* text输入框聚焦时的样式 */
+      input[type="text"]:focus {
+        outline-color: rgb(255, 145, 0);
+        box-shadow: 0 0 5px rgba(227, 117, 27, 0.1);
+      }
+      /* 按钮样式 */
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      /* 结果输出框样式 */
+      input[readonly] {
+        background-color: #f0f0f0;
+      }
+
+      .error-message {
+        display: none;
+        color: red;
+        margin-left: 10px;
+      }
+
+      .error-icon {
+        display: none;
+        color: red;
+        margin-left: 5px;
+      }
+
+      input:invalid + .error-message {
+        display: block;
+      }
+
+      input:invalid + .error-icon {
+        display: inline;
+      }
+      /* 浮动计算结果框 */
+      #result-container {
+        position: fixed;
+        top: 60px;
+        right: 20px;
+        width: 200px;
+        height: 100px;
+        background-color: rgba(240, 240, 240, 0.7);
+        border: 1px solid #c0c0c0;
+        border-radius: 5px;
+        box-shadow: 2px 2px 5px #888;
+        padding: 10px;
+        font-size: 16px;
+        text-align: center;
+        line-height: 1.2;
+        color: #333;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      #result-container.show {
+        opacity: 1;
+      }
+
+      #result-container .close-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        background-color: #ccc;
+        color: #fff;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 18px;
+      }
+
+      #result-container .close-btn:hover {
+        background-color: #999;
+      }
+      .error {
+        color: red; /* 错误提示字体颜色 */
+        display: none; /* 初始时默认隐藏 */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>互感器计算器</h1>
+    <!-- 浮动计算结果框 -->
+    <div id="result-container" style="float: right"></div>
+
+    <div class="container">
+      <!-- 标签页 -->
+      <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'page1')">
+          CT设计
+        </button>
+        <button class="tablinks" onclick="openTab(event, 'page2')">
+          计算结果
+        </button>
+      </div>
+
+      <!-- 电流互感器设计参数 -->
+      <div id="page1" class="tabcontent">
+        <h2>电流互感器设计参数</h2>
+        <label for="type">电流互感器类型：</label>
+        <select id="type">
+          <option value="测量计量">测量计量</option>
+          <option value="保护">保护</option></select
+        ><br />
+        <label for="N1">一次匝数N1(匝)：</label>
+        <input type="number" id="N1" value="1" /><br />
+
+        <label for="rated-current">额定一次电流I1(A)：</label>
+        <input
+          type="number"
+          id="rated-current"
+          name="rated-current"
+          value="1000"
+          required
+        /><span class="error"></span><br />
+
+        <label for="secondary-current">额定二次电流I2：</label>
+        <input
+          type="number"
+          id="secondary-current"
+          name="secondary-current"
+          value="5"
+        />
+        <select
+          id="current-unit"
+          name="current-unit"
+          onchange="convertCurrent()"
+        >
+          <option value="A">A</option>
+          <option value="mA">mA</option>
+        </select>
+        <br />
+        <label for="cl">准确级CL.：</label>
+        <select id="cl" style="width: 90px"></select>
+        <label for="param">Kalf:</label>
+        <input
+          id="Kalf"
+          type="text"
+          list="Kalflist"
+          style="width: 90px"
+          value="5"
+        />
+        <datalist id="Kalflist">
+          <option>5</option>
+          <option>10</option>
+          <option>15</option>
+          <option>20</option>
+          <option>25</option>
+        </datalist>
+        <br />
+        <label for="core-shape">铁心形状：</label>
+        <select id="core-shape" name="core-shape" onchange="showCoreParams()">
+          <option value="rectangle">矩形</option>
+          <option value="circle">圆形</option></select
+        ><br />
+
+        <div id="core-params">
+          <!-- 根据铁心形状选择显示的输入框 -->
+        </div>
+
+        <label for="kp">叠片系数Kp：</label>
+        <input
+          type="number"
+          id="kp"
+          name="kp"
+          min="0.85"
+          max="0.95"
+          step="0.01"
+          value="0.95"
+        /><br />
+
+        <button onclick="calculate()">计算</button>
+        <button id="toggleResult" onClick="toggleResult()">开</button>
+      </div>
+
+      <!-- 计算结果输出 -->
+      <div id="page2" class="tabcontent">
+        <h2>计算结果</h2>
+
+        <label for="turns">额定匝数N2(T)：</label>
+        <input type="number" id="turns" name="turns" readonly /><br />
+
+        <label for="area">铁心截面积(cm²)：</label>
+        <input type="number" id="area" name="area" readonly /><br />
+      </div>
+    </div>
+    <!-- 引入JavaScript文件 -->
+    <script>
+      // 准确级CL. -动态生成准确级选择框的选项
+      const typeSelect = document.getElementById("type");
+      const clSelect = document.getElementById("cl");
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // 设置默认值
+        typeSelect.value = "测量计量";
+        clSelect.innerHTML = `
+    <option value="0.5" selected>0.5</option>
+    <option value="0.5s">0.5s</option>
+    <option value="0.2">0.2</option>
+    <option value="0.2s">0.2s</option>
+  `;
+
+        // 触发change事件
+        const event = new Event("change");
+        typeSelect.dispatchEvent(event);
+      });
+
+      typeSelect.addEventListener("change", () => {
+        const type = typeSelect.value;
+        if (type === "测量计量") {
+          clSelect.innerHTML = `
+      <option value="0.5" selected>0.5</option>
+      <option value="0.5s">0.5s</option>
+      <option value="0.2">0.2</option>
+      <option value="0.2s">0.2s</option>
+    `;
+        } else if (type === "保护") {
+          clSelect.innerHTML = `
+      <option value="5P">5P</option>
+      <option value="10P">10P</option>
+    `;
+        }
+      });
+
+      //额定二次电流I2，单位切换时的运算
+      function convertCurrent() {
+        //2、额定二次电流I2，单位切换时的运算
+        // 获取当前选定的电流单位
+        var currentUnit = document.getElementById("current-unit").value;
+
+        // 获取输入框中的电流值
+        var current = document.getElementById("secondary-current").value;
+
+        // 将电流值转换为相应的单位
+        if (currentUnit == "mA") {
+          current = current * 1000;
+        } else if (currentUnit == "A") {
+          current = current / 1000;
+        }
+
+        // 将转换后的电流值更新到输入框中
+        document.getElementById("secondary-current").value = current;
+        calculate;
+      }
+      // 显示对应铁心形状的输入框
+      function showCoreParams() {
+        var shape = document.getElementById("core-shape").value;
+        var paramsDiv = document.getElementById("core-params");
+        if (shape === "circle") {
+          paramsDiv.innerHTML =
+            '<label for="inner-diameter">内径(mm)：</label><input type="number" id="inner-diameter" name="inner-diameter" required min="0"><br>' +
+            '<label for="outer-diameter">外径(mm)：</label><input type="number" id="outer-diameter" name="outer-diameter" required min="0"><br>' +
+            '<label for="height">高度(mm)：</label><input type="number" id="height" name="height" required min="0"><br>';
+          document
+            .getElementById("inner-diameter")
+            .addEventListener("input", checkCircleParams);
+          document
+            .getElementById("outer-diameter")
+            .addEventListener("input", checkCircleParams);
+          document
+            .getElementById("height")
+            .addEventListener("input", checkCircleParams);
+          // 添加提示信息
+          paramsDiv.innerHTML +=
+            '<span style="color:red">内径、外径和高度必须大于零，且外径必须大于内径。</span>';
+        } else {
+          paramsDiv.innerHTML =
+            '<label for="inner-length">内长(mm)：</label><input type="number" id="inner-length" name="inner-length" required><br>' +
+            '<label for="inner-width">内宽(mm)：</label><input type="number" id="inner-width" name="inner-width" required><br>' +
+            '<label for="stacking-thickness">叠厚(mm)：</label><input type="number" id="stacking-thickness" name="stacking-thickness" required><br>' +
+            '<label for="height">高度(mm)：</label><input type="number" id="height" name="height" required><br>';
+        }
+      }
+      //圆形输入框限制函数
+      function checkCircleParams() {
+        var innerDiameter = parseFloat(
+          document.getElementById("inner-diameter").value
+        );
+        var outerDiameter = parseFloat(
+          document.getElementById("outer-diameter").value
+        );
+        var height = parseFloat(document.getElementById("height").value);
+
+        if (
+          innerDiameter <= 0 ||
+          outerDiameter <= 0 ||
+          height <= 0 ||
+          outerDiameter <= innerDiameter
+        ) {
+          document
+            .getElementById("page1")
+            .querySelector("button").disabled = true;
+        } else {
+          document
+            .getElementById("page1")
+            .querySelector("button").disabled = false;
+        }
+      }
+
+      // 计算额定匝数和铁心截面积
+      function calculate() {
+        // 读取电流互感器类型
+        const typeSelect = document.getElementById("type");
+        const type = typeSelect.value;
+
+        // 根据电流互感器类型计算铁心面积
+        if (type === "测量计量") {
+          // 计算铁心面积（测量计量）
+        } else if (type === "保护") {
+          // 计算铁心面积（保护）
+        }
+        var I1 = parseFloat(document.getElementById("rated-current").value);
+        var I2 = parseFloat(document.getElementById("secondary-current").value);
+        var I2unit = document.getElementById("current-unit").value;
+        // 将I2转换为A
+        if (I2unit === "mA") {
+          I2 = I2 / 1000;
+        }
+        var N2 = I1 / I2;
+        //计算匝数，保留位小数
+        document.getElementById("turns").value = N2.toFixed(0);
+
+        var shape = document.getElementById("core-shape").value;
+        var area;
+        if (shape === "circle") {
+          var innerDiameter = parseFloat(
+            document.getElementById("inner-diameter").value
+          );
+          var outerDiameter = parseFloat(
+            document.getElementById("outer-diameter").value
+          );
+          var height = parseFloat(document.getElementById("height").value);
+          var kp = parseFloat(document.getElementById("kp").value);
+          var radius = (outerDiameter - innerDiameter) / 2;
+          area = Math.round(((kp * height * radius) / 100) * 100) / 100;
+          //输出到控制台
+          console.log(radius);
+          console.log(kp);
+          console.log(height);
+        } else {
+          var innerLength = parseFloat(
+            document.getElementById("inner-length").value
+          );
+          var innerWidth = parseFloat(
+            document.getElementById("inner-width").value
+          );
+          var stackingThickness = parseFloat(
+            document.getElementById("stacking-thickness").value
+          );
+          var height = parseFloat(document.getElementById("height").value);
+          area =
+            innerLength * innerWidth +
+            (innerLength + stackingThickness) * height * 2 +
+            (innerWidth + stackingThickness) * height * 2;
+        }
+        document.getElementById("area").value = area.toFixed(2);
+
+        // 将计算结果显示在浮动计算结果框中
+
+        var resultContainer = document.getElementById("result-container");
+        resultContainer.innerHTML = "额定匝数N2(T)：" + N2.toFixed(0);
+        // 在计算完成后，显示计算结果框并添加动画效果
+        resultContainer.classList.add("show");
+      }
+      //关闭显示悬浮框
+      var toggleButton = document.getElementById("toggleResult");
+      var resultContainer = document.getElementById("result-container");
+
+      function toggleResult() {
+        if (resultContainer.style.display === "none") {
+          resultContainer.style.display = "block";
+          toggleButton.innerHTML = "开";
+        } else {
+          resultContainer.style.display = "none";
+          toggleButton.innerHTML = "关";
+        }
+      }
+
+      // 标签页切换
+      function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+        //切换标签时，调用计算函数
+        if (tabName === "page2") {
+          calculate();
+        }
+      }
+
+      //页面加载完成时，运行
+      window.onload = function () {
+        //铁心形状，默认选择圆形
+        document.getElementById("core-shape").value = "circle";
+        showCoreParams();
+        //默认显示第一页
+        openTab(event, "page1");
+        //圆形输入参数限制
+        checkCircleParams();
+      };
+    </script>
+  </body>
+</html>
